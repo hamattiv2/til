@@ -80,6 +80,8 @@ minikube start --vm-driver=virtualbox
 Podはノード上に作成される。
 
 # Serviceとは
+一時的で永続的なIPアドレスを持たないPodに対してクライアントがアクセスするための機能
+
 Podは１つ１つにIPアドレスがふられているが、それぞれのPodと通信する場合IPアドレスを指定する必要がある。
 Podはいつ消えるかわからない存在であるため、IPアドレスを覚えておくのはナンセンス。
 1つのIPアドレス(Static IP)を用意しておき、Podへの接続を可能とすることで上記の問題を解消する。
@@ -98,10 +100,28 @@ kubectl expose pod <pod name> --type ClusterIP --port <port> --name <service nam
 # kubectl get service ←サービス一覧確認
 ```
 
+ClusterIPはクラスタ内部でしか有効ではない(外部との疎通が取れない)
+
 ### NodePort
+クラスタ外へPodを公開しNodeIPとNodePort経由で外部との疎通を行うService
+手軽に外部公開ができるNodePortは便利なものだが、ノードの再起動などが行われると内部のPodのIP等が切り替わるため
+使用できなくなる。
+また、NodeIPとNodePortを知っておく必要があるため本番環境での利用には適していない。
+
+サービス作成
+```
+kubectl expose pod <pod name> --type NodePort --port <port> --name <service name>
+```
 
 ### LoadBalancer
+クラスタ外へNodeIPにDNS名が動的に付与されるサービス。
+DNSが付与されるので、IPおよびPortを把握しておく必要性がなくなる。
+ただし、L4までしかサポートしていないためL7に対応させるにはIngressというリソースを使う必要がある。
 
+サービス作成
+```
+kubectl expose pod <pod name> --type LoadBalancer --port <port> --name <service name>
+```
 
 
 
