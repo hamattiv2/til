@@ -123,6 +123,50 @@ DNSが付与されるので、IPおよびPortを把握しておく必要性が�
 kubectl expose pod <pod name> --type LoadBalancer --port <port> --name <service name>
 ```
 
+# Ingress
+Podをクラスタ内外へ公開するL7ロードバランサ
+URLによるロードバランスが可能(ドメイン、パスによる振り分けが可能になる)
+
+### Addonをリスアップ
+```
+minikube addons list
+```
+
+### Ingress addonを追加
+```
+minikube addons enable ingress
+```
+### Ingress controller podをチェック
+```
+kubectl get pods -n kube-system
+```
+
+### ingress resourceを作成
+```
+kubectl apply -f ingress.yaml
+```
+
+**ingress.yaml**
+```ingress.yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: helloworld
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: helloworld-nodeport
+          servicePort: 8080
+```
+
+上記のyamlファイルを適用することでどのパスにアクセスしても helloworld-nodeportのpodが返ってくる。
+
+# Replica
 
 
 # k8sコマンド
