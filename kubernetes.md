@@ -79,6 +79,26 @@ minikube start --vm-driver=virtualbox
 管理上の基本単位となり、NICやストレージ、ボリュームを共有する。
 Podはノード上に作成される。
 
+## Pod作成
+```pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+    name: sample
+spec:
+    containers:
+    - name: nginx 
+      image: nginx:1.17.2-alpine
+      volumeMounts: # コンテナのマウント先
+      - name: storage #volumes.nameと同じ名前にする
+        mountPath: /home/nginx
+    volumes: # ホストのマウント情報
+    - name: storage
+      hostPath: 
+        path: /data/storage
+        type: Directory
+```
+
 # Serviceとは
 一時的で永続的なIPアドレスを持たないPodに対してクライアントがアクセスするための機能
 
@@ -167,7 +187,45 @@ spec:
 上記のyamlファイルを適用することでどのパスにアクセスしても helloworld-nodeportのpodが返ってくる。
 
 # Replica
+Podの集合体、Podのスケールが可能
 
+```replicaset.yml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+    name: sample
+spec:
+    replicas: 3 # 複製するPodの数
+    selector: # ReplicaSetとPodを紐づける template.metadata.labelsと一致する必要がある
+        matchLabels:
+            app: web
+            env: study
+    template: # 作成するPodのマニュフェストファイル
+        metadata:
+            name: nginx
+            labels:
+                app: web
+                env: study
+        spec:
+            containers:
+            - name: nginx
+              image: nginx:1.17.2-alpine
+```
+
+# Podとホスト間のファイル転送
+ホスト→Pod
+```
+kubectl cp <src> <pod name>:<dest>
+```
+src: カレントディレクトリからのパス
+dest: 絶対パス
+
+Pod→ホスト
+```
+kubectl cp <pod name>:<src> <dest>
+```
+src: 絶対パス
+dest: カレントディレクトリからのパス
 
 # k8sコマンド
 [コマンドチートシート](https://kubernetes.io/ja/docs/reference/kubectl/cheatsheet/)
@@ -194,14 +252,24 @@ kubectl config view
 kubectl get pod
 ```
 
-### pod一覧確認(ロングバージョン)
-```
-kubectl get pod,svc -o wide
-```
-
-### Service一覧
+### Service一覧確認
 ```
 kubectl get service
+```
+
+### Replicaset一覧確認
+```
+kubectl get rs
+```
+
+### Deploy一覧確認
+```
+kubectl get deploy
+```
+
+### 一覧確認(ロングバージョン)
+```
+kubectl get <type> -o wide
 ```
 
 ### シェルへアクセスする
@@ -209,12 +277,16 @@ kubectl get service
 kubectl exec -it <pod name> sh
 ```
 
-### Podを削除する
+### 状態の確認
 ```
-kubectl delete pod <pod name>
+kubectl describe <type/name>
 ```
 
-### Serviceを削除する
+### ログの確認
 ```
-kubectl delete service <service name>
+kubectl logs <type/name>
 ```
+
+
+
+
