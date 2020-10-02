@@ -1,5 +1,24 @@
 # Kubernetesとは
-Dockerコンテナを管理するためのツール
+Dockerコンテナを管理するためapiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+    name: sample
+spec:
+    replicas: 3 # 複製するPodの数
+    selector: # ReplicaSetとPodを紐づける template.metadata.labelsと一致する必要がある
+        matchLabels:
+            app: web
+            env: study
+    template: # 作成するPodのマニュフェストファイル
+        metadata:
+            name: nginx
+            labels:
+                app: web
+                env: study
+        spec:
+            containers:
+            - name: nginx
+              image: nginx:1.17.2-alpineのツール
 Dockerは単体ホスト上に複数コンテナを構築していたが、ホスト故障時の単一故障が発生する可能性がある。
 k8sは複数ホスト上に複数コンテナを構築することで単一障害の可能性を潰す。
 またコンテナ故障時には自動修復(再起動)する機能を持っていたり、ロードバランシングや自動スケーリング等の機能を持ち合わせている。
@@ -212,6 +231,53 @@ spec:
               image: nginx:1.17.2-alpine
 ```
 
+# Deployment
+ReplicaSetの世代管理を行う。
+
+```deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: nginx
+    annotations: # Deploymentを更新するときにコメントを残すときに使う
+        kubernetes.io/change-cause: "Update nginx 1.17.3"
+spec:
+    replicas: 2
+    selector:
+        matchLabels:
+            app: web
+            env: study
+    revisionHistoryLimit: 14 # 何個の世代を残すのか指定する。後々世代を戻すときに使える。
+    strategy: 
+        type: RollingUpdate
+        rollingUpdate:
+            maxSurge: 1 # レプリカ数を超えてよいPod数
+            maxUnavailable: 1 # 1度に消失してよいPod数
+    template:
+        metadata:
+            name: nginx
+            labels:
+                app: web
+                env: study
+        spec:
+            containers:
+                - name: nginx
+                  image: nginx:1.17.3-alpine
+```
+
+### strategy.rollingUpdate.maxSurge, maxUnavailableについて
+[maxSurge, maxUnavailableのわかりやすい解説](https://tech-lab.sios.jp/archives/18553#RollingUpdate)
+
+### ロールアップ
+ロールアップするときはymlファイルを更新し、再度`kubectl apply -f <file>`することで更新してくれる。
+
+### ロールバック
+```
+kubectl rollout undo <type/name> [--to-revision=<revision number>]
+
+# 例の場合だと14個のrevisionHisotryを残すので、to-revisionでも最大14を指定することが可能
+```
+
 # Podとホスト間のファイル転送
 ホスト→Pod
 ```
@@ -287,6 +353,11 @@ kubectl describe <type/name>
 kubectl logs <type/name>
 ```
 
+### rollingUpdateのhistoryを確認する
+```
+kubectl rollout history <type/name>
+```
 
+### rollout
 
 
