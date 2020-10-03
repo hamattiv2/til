@@ -8,7 +8,7 @@ spec:
     selector: # ReplicaSetとPodを紐づける template.metadata.labelsと一致する必要がある
         matchLabels:
             app: web
-            env: study
+            env: study###
     template: # 作成するPodのマニュフェストファイル
         metadata:
             name: nginx
@@ -150,6 +150,39 @@ ClusterIPはクラスタ内部でしか有効ではない(外部との疎通が�
 サービス作成
 ```
 kubectl expose pod <pod name> --type NodePort --port <port> --name <service name>
+```
+
+ymlファイルの場合
+```nodeport.yml
+
+# nginxを構築
+apiVersion: v1
+kind: Pod
+metadata:
+    name: nginx
+    labels:
+        app: web
+        env: study
+spec:
+    containers:
+    - name: nginx
+      image: nginx:1.17.2-alpine
+
+# 上記で定義したnginxに外部からアクセスできるようNodePortでServiceを作成する
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: web-service
+spec:
+    type: NodePort
+    selector:
+        app: web
+        env: study
+    ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30000
 ```
 
 ### LoadBalancer
