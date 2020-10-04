@@ -1,24 +1,5 @@
 # Kubernetesとは
-Dockerコンテナを管理するためapiVersion: apps/v1
-kind: ReplicaSet
-metadata:
-    name: sample
-spec:
-    replicas: 3 # 複製するPodの数
-    selector: # ReplicaSetとPodを紐づける template.metadata.labelsと一致する必要がある
-        matchLabels:
-            app: web
-            env: study###
-    template: # 作成するPodのマニュフェストファイル
-        metadata:
-            name: nginx
-            labels:
-                app: web
-                env: study
-        spec:
-            containers:
-            - name: nginx
-              image: nginx:1.17.2-alpineのツール
+Dockerコンテナを管理するためのツール
 Dockerは単体ホスト上に複数コンテナを構築していたが、ホスト故障時の単一故障が発生する可能性がある。
 k8sは複数ホスト上に複数コンテナを構築することで単一障害の可能性を潰す。
 またコンテナ故障時には自動修復(再起動)する機能を持っていたり、ロードバランシングや自動スケーリング等の機能を持ち合わせている。
@@ -309,6 +290,51 @@ spec:
 kubectl rollout undo <type/name> [--to-revision=<revision number>]
 
 # 例の場合だと14個のrevisionHisotryを残すので、to-revisionでも最大14を指定することが可能
+```
+
+# ConfigMap
+k8sの設定情報を集約するリソース
+
+# Secret
+Pod上で扱い機微情報を取り扱うリソース。
+base64で暗号化した情報をPodに展開するときに複合したりできる。
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+    name: sample-secret
+data:
+    message: SGVsbG8gV29ybGQ= # echo -n 'Hello World !' | base64
+    keyfile: WU9VUi1TRUNSRVQtS0VZ   # cat ./keyfile | base64
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+    name: sample
+    namespace: default
+spec:
+    containers:
+    - name: sample
+      image: nginx:1.17.2-alpine
+      env:
+      - name: MESSAGE
+        valueFrom:
+          secretKeyRef:
+            name: sample-secret
+            key: message
+  
+      volumeMounts: # Secretで暗号化したいファイルを指定する場合のパターン
+      - name: secret-storage # spec.volumes.nameと名前を合わせる
+        mountPath: /home/nginx # Pod内の保存先
+    volumes:
+    - name: secret-storage
+      secret:
+        secretName: sample-secret
+        items:
+        - key: keyfile
+          path: keyfile # 
 ```
 
 # Podとホスト間のファイル転送
