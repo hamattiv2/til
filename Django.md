@@ -369,7 +369,7 @@ class SignUpForm(UserCreationForm):
 ```
 
 
-上記で登場するforms.PasswordInputは`django/forms/widgets.py'に定義されたPasswordInputクラスを呼び出して実行されている。
+上記で登場するforms.PasswordInputは`django/forms/widgets.py`に定義されたPasswordInputクラスを呼び出して実行されている。
 
 ```django/forms/widgets.py
 class PasswordInput(Input):
@@ -388,4 +388,35 @@ class PasswordInput(Input):
 
 このクラス(ほかにもTextInputやEmailInputクラスが存在する)が呼び出されると、template_nameに記載のあるhtmlファイルが呼ばれ、そのクラスに合った(PasswordInputの場合)inputフィールドが展開される。
 
+# 管理画面のアプリケーションの名称、モデルの名称を変更する。
+### アプリケーションの名称
+`アプリケーション/apps.py`内に自動的にDjangoに読み込ませるアプリケーション情報が格納されているが、
+ここでAdmin画面上でどう表示するか指定できる。
+```apps.py
+from django.apps import AppConfig
 
+
+class ShopConfig(AppConfig):
+    name = 'shop'
+    verbose_name = 'ショップ'
+```
+
+### モデル名称
+```models.py
+class Book(models.Model):
+
+    class Meta:
+        db_table = 'book'
+        verbose_name = verbose_name_plural = '本'
+
+    title = models.CharField(verbose_name='タイトル', max_length=255)
+
+    def __str__(self):
+        return self.title
+```
+Djangoではデフォルトでモデル名にsがつく(複数形になる)ためsが不要な場合verbose_name_pluralで名称を定義してあげることでsが削除される。
+
+# ログアウト後の遷移画面を指定する
+```settings.py
+LOGOUT_REDIRECT_URL = "urls"
+```
