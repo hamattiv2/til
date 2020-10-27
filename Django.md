@@ -420,3 +420,15 @@ Djangoではデフォルトでモデル名にsがつく(複数形になる)た�
 ```settings.py
 LOGOUT_REDIRECT_URL = "urls"
 ```
+
+# パスワード再設定メール送信
+https://docs.djangoproject.com/ja/3.1/ref/contrib/admin/#adding-a-password-reset-feature
+上記を参考にurls.pyにパスを設定することで、パスワード再設定用のメール送信画面、パスワード再設定画面が構築される。
+メール送信時に送られるリンクの有効期限はデフォルト3日間。
+PASSWORD_RESET_TIMEOUT_DAYSの設定を変更することで有効期限を変更することが可能。
+また、メールのテンプレは以下に格納されている。
+
+```
+django/contrib/auth/templates/registration/password_reset_subject.txt
+django/contrib/admin/templates/registration/password_reset_email.html
+```
